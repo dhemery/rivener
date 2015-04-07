@@ -1,3 +1,4 @@
+require 'nokogiri'
 require 'ostruct'
 
 module Rivener
@@ -10,8 +11,21 @@ module Rivener
       author_first_name: 'FirstName'
     }
 
-    def initialize(xml)
-      @xml = xml
+    def self.scrivx(scrivener_path)
+      basename = File.basename(scrivener_path, '.*')
+      scrivx_path = File.join(scrivener_path, "#{basename}.scrivx")
+
+      raise "Cannot read SCRIVX file: #{scrivx_path}" unless File.exist? scrivx_path
+
+      File.open(scrivx_path) { |scrivx_file| return Rivener::Scrivx.new(Nokogiri::XML scrivx_file)}
+    end
+
+    def self.project(scrivener_path)
+      scrivx(scrivener_path).project
+    end
+
+    def initialize(scrivx)
+      @scrivx = scrivx
     end
 
     def project
@@ -21,7 +35,7 @@ module Rivener
     private
 
     def project_properties_node
-      @xml.at_xpath('.//ProjectProperties')
+      @scrivx.at_xpath('.//ProjectProperties')
     end
 
     def properties_from_elements(context:, map:)
