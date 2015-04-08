@@ -30,26 +30,28 @@ module Rivener
 
     def project
       project = OpenStruct.new(properties_from_elements(context: project_properties_node, map: PROJECT_PROPERTIES_MAP))
-      project.binder_items = binder_items(context: binder_node, parent: nil)
+      project.binder = OpenStruct.new
+      project.binder[:children] = children(context: binder_node, parent: project.binder)
       project
     end
 
     private
 
-    def binder_items(context:, parent:)
+    def children(context:, parent:)
+      return [] if context.nil?
       context.xpath('./BinderItem').map do |binder_item_node|
         include = binder_item_node.at_xpath('./MetaData/IncludeInCompile')
         properties = {
-          title: binder_item_node.at_xpath('./Title').content,
           id: binder_item_node['ID'],
           include_in_compile: !include.nil? && include.content == 'Yes',
           parent: parent,
-          type: binder_item_node['Type']
+          title: binder_item_node.at_xpath('./Title').content,
+          type: binder_item_node['Type'],
         }
-        binder_item = OpenStruct.new(properties)
-        children = binder_item_node.at_xpath('Children')
-        binder_item.binder_items = binder_items(context: children, parent: binder_item) unless children.nil?
-        binder_item
+        item = OpenStruct.new(properties)
+        children_node = binder_item_node.at_xpath('Children')
+        item.children = children(context: children_node, parent: item)
+        item
       end
     end
 

@@ -67,23 +67,23 @@ describe Rivener::Scrivx do
     describe 'BinderItem elements' do
       # Every project has Draft, Research, and Trash folders
       it 'each as binder_items' do
-        project.binder_items.size.must_equal 3
+        project.binder.children.size.must_equal 3
       end
 
       it 'with an id' do
-        items = project.binder_items
+        items = project.binder.children
         items.map(&:id).sort.must_equal ['0', '1', '2']
       end
 
       it 'with a title' do
-        items = project.binder_items
+        items = project.binder.children
         items.find{ |item| item.id == '0' }.title.must_equal 'Draft'
         items.find{ |item| item.id == '1' }.title.must_equal 'Research'
         items.find{ |item| item.id == '2' }.title.must_equal 'Trash'
       end
 
       it 'with a type' do
-        items = project.binder_items
+        items = project.binder.children
         items.find{ |item| item.id == '0' }.type.must_equal 'DraftFolder'
         items.find{ |item| item.id == '1' }.type.must_equal 'ResearchFolder'
         items.find{ |item| item.id == '2' }.type.must_equal 'TrashFolder'
@@ -93,19 +93,20 @@ describe Rivener::Scrivx do
         # These all have IncludeInCompile=Yes.
         # Omitted IncludeInCompile means No.
         scrivx_doc.at_xpath(%{.//BinderItem[@ID='2']/MetaData/IncludeInCompile}).remove
-        items = project.binder_items
+        items = project.binder.children
         items.find{ |item| item.id == '0' }.include_in_compile.must_equal true
         items.find{ |item| item.id == '1' }.include_in_compile.must_equal true
         items.find{ |item| item.id == '2' }.include_in_compile.must_equal false
       end
 
-      it 'none with a parent' do
-        project.binder_items.each{ |item| item.parent.must_be_nil }
+      it 'with the binder as its parent' do
+        project.binder.children.each{ |item| item.parent.must_be_same_as project.binder }
       end
     end
 
     describe 'children of BinderItems' do
-      let(:draft) { project.binder_items.find{ |item| item.id == '0' } }
+      let(:draft) { project.binder.children.find{ |item| item.id == '0' } }
+      let(:research) { project.binder.children.find{ |item| item.id == '1' } }
       before do
         draft_folder_children_node = Nokogiri::XML::DocumentFragment.parse <<-SCRIVX
           <Children>
@@ -128,30 +129,37 @@ describe Rivener::Scrivx do
       end
 
       it %{lists each child in its parent's binder_items} do
-        draft_child = draft.binder_items.first
+        draft_child = draft.children.first
         draft_child.id.must_equal '11'
-        draft_grandchild = draft_child.binder_items.first
+        draft_grandchild = draft_child.children.first
         draft_grandchild.id.must_equal '21'
       end
 
       it %{lists each binder item as its children's parent} do
-        chapter_one = draft.binder_items.first
+        chapter_one = draft.children.first
         chapter_one.parent.must_be_same_as draft
-        scene_one = chapter_one.binder_items.first
+        scene_one = chapter_one.children.first
         scene_one.parent.must_be_same_as chapter_one
       end
 
       it 'each child has all of the binder item properties' do
-        chapter_one = draft.binder_items.first
+        chapter_one = draft.children.first
         chapter_one.title.must_equal 'Chapter One'
         chapter_one.id.must_equal '11'
         chapter_one.type.must_equal 'Folder'
         chapter_one.include_in_compile.must_equal false
-        scene_one = chapter_one.binder_items.first
+        scene_one = chapter_one.children.first
         scene_one.title.must_equal 'Scene One'
         scene_one.id.must_equal '21'
         scene_one.type.must_equal 'Text'
         scene_one.include_in_compile.must_equal true
+      end
+
+      it 'yields empty binder_item list if no children' do
+        research.children.must_equal []
+        chapter_one = draft.children.first
+        scene_one = chapter_one.children.first
+        scene_one.children.must_equal []
       end
     end
   end
