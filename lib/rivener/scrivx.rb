@@ -29,10 +29,33 @@ module Rivener
     end
 
     def project
-      OpenStruct.new(properties_from_elements(context: project_properties_node, map: PROJECT_PROPERTIES_MAP))
+      project = OpenStruct.new(properties_from_elements(context: project_properties_node, map: PROJECT_PROPERTIES_MAP))
+      project.binder_items = binder_items(context: binder_node, parent: nil)
+      project
     end
 
     private
+
+    def binder_items(context:, parent:)
+      context.xpath('./BinderItem').map do |binder_item_node|
+        include = binder_item_node.at_xpath('./MetaData/IncludeInCompile')
+        properties = {
+          title: binder_item_node.at_xpath('./Title').content,
+          id: binder_item_node['ID'],
+          include_in_compile: !include.nil? && include.content == 'Yes',
+          parent: parent,
+          type: binder_item_node['Type']
+        }
+        binder_item = OpenStruct.new(properties)
+        children = binder_item_node.at_xpath('Children')
+        binder_item.binder_items = binder_items(context: children, parent: binder_item) unless children.nil?
+        binder_item
+      end
+    end
+
+    def binder_node
+      @scrivx.at_xpath('.//Binder')
+    end
 
     def project_properties_node
       @scrivx.at_xpath('.//ProjectProperties')
@@ -40,7 +63,8 @@ module Rivener
 
     def properties_from_elements(context:, map:)
       map.inject({}) do |properties, (property, xpath)|
-        properties[property] = context.at_xpath(xpath).content
+        node = context.at_xpath(xpath)
+        properties[property] = node.content unless node.nil?
         properties
       end
     end
