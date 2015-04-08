@@ -94,9 +94,9 @@ describe Rivener::Scrivx do
         # Omitted IncludeInCompile means No.
         scrivx_doc.at_xpath(%{.//BinderItem[@ID='2']/MetaData/IncludeInCompile}).remove
         items = project.binder.children
-        items.find{ |item| item.id == '0' }.include_in_compile.must_equal true
-        items.find{ |item| item.id == '1' }.include_in_compile.must_equal true
-        items.find{ |item| item.id == '2' }.include_in_compile.must_equal false
+        items.find{ |item| item.id == '0' }.include_in_compile?.must_equal true
+        items.find{ |item| item.id == '1' }.include_in_compile?.must_equal true
+        items.find{ |item| item.id == '2' }.include_in_compile?.must_equal false
       end
 
       it 'with the binder as its parent' do
@@ -147,12 +147,12 @@ describe Rivener::Scrivx do
         chapter_one.title.must_equal 'Chapter One'
         chapter_one.id.must_equal '11'
         chapter_one.type.must_equal 'Folder'
-        chapter_one.include_in_compile.must_equal false
+        chapter_one.include_in_compile?.must_equal false
         scene_one = chapter_one.children.first
         scene_one.title.must_equal 'Scene One'
         scene_one.id.must_equal '21'
         scene_one.type.must_equal 'Text'
-        scene_one.include_in_compile.must_equal true
+        scene_one.include_in_compile?.must_equal true
       end
 
       it 'yields empty binder_item list if no children' do

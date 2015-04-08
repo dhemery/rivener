@@ -43,7 +43,7 @@ module Rivener
         include = binder_item_node.at_xpath('./MetaData/IncludeInCompile')
         properties = {
           id: binder_item_node['ID'],
-          include_in_compile: !include.nil? && include.content == 'Yes',
+          include_in_compile?: !include.nil? && include.content == 'Yes',
           parent: parent,
           title: binder_item_node.at_xpath('./Title').content,
           type: binder_item_node['Type'],
