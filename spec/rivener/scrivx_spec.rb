@@ -66,7 +66,7 @@ describe Rivener::Scrivx do
   describe 'parses the Binder' do
     describe 'BinderItem elements' do
       # Every project has Draft, Research, and Trash folders
-      it 'each as binder_items' do
+      it 'as binder_items' do
         project.binder.children.size.must_equal 3
       end
 
@@ -162,5 +162,8 @@ describe Rivener::Scrivx do
         scene_one.children.must_equal []
       end
     end
+  end
+
+  describe 'calculates file names' do
   end
 end

@@ -1,8 +1,11 @@
 require 'nokogiri'
 require 'ostruct'
+require 'pathname'
 
 module Rivener
   class Scrivx
+    attr_reader :path
+
     PROJECT_PROPERTIES_MAP = {
       title: 'ProjectTitle',
       abbreviated_title: 'AbbreviatedTitle',
@@ -12,12 +15,13 @@ module Rivener
     }
 
     def self.scrivx(scrivener_path)
-      basename = File.basename(scrivener_path, '.*')
-      scrivx_path = File.join(scrivener_path, "#{basename}.scrivx")
+      @path = Pathname(scrivener_path)
+      basename = @path.basename
+      scrivx_path = @path / basename.sub_ext('.scrivx')
 
-      raise "Cannot read SCRIVX file: #{scrivx_path}" unless File.exist? scrivx_path
+      raise "Cannot read SCRIVX file: #{scrivx_path}" unless scrivx_path.exist?
 
-      File.open(scrivx_path) { |scrivx_file| return Rivener::Scrivx.new(Nokogiri::XML scrivx_file)}
+      scrivx_path.open { |scrivx_file| return Rivener::Scrivx.new(Nokogiri::XML scrivx_file)}
     end
 
     def self.project(scrivener_path)
