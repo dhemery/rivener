@@ -5,7 +5,8 @@ require File.expand_path('../../spec_helper', __FILE__)
 require 'nokogiri'
 
 describe Rivener::Scrivx do
-  let(:scrivx) { Rivener::Scrivx.new(scrivx_doc) }
+  let(:scrivx) { Rivener::Scrivx.new(scrivx: scrivx_doc, path: scrivener_path) }
+  let(:scrivener_path) { Pathname 'my.scriv'}
   let(:scrivx_doc) { basic_scrivx_document }
   let(:scrivx_project_node) { scrivx_doc.at_css 'ScrivenerProject' }
   let(:scrivx_project_properties_node) { scrivx_project_node.at_css 'ProjectProperties' }
@@ -164,6 +165,28 @@ describe Rivener::Scrivx do
     end
   end
 
-  describe 'calculates file names' do
+  # Note that these methods DO NOT determine whether the file exists.
+  describe 'calculates the path' do
+    let(:draft) { project.binder.children.find{ |item| item.id == '0' } }
+    let(:research) { project.binder.children.find{ |item| item.id == '1' } }
+    let(:trash) { project.binder.children.find{ |item| item.id == '2' } }
+
+    it 'to the file' do
+      draft.file_path.must_equal scrivener_path / 'Files/Docs/0.rtf'
+      research.file_path.must_equal scrivener_path / 'Files/Docs/1.rtf'
+      trash.file_path.must_equal scrivener_path / 'Files/Docs/2.rtf'
+    end
+
+    it 'to the notes' do
+      draft.notes_path.must_equal scrivener_path / 'Files/Docs/0_notes.rtf'
+      research.notes_path.must_equal scrivener_path / 'Files/Docs/1_notes.rtf'
+      trash.notes_path.must_equal scrivener_path / 'Files/Docs/2_notes.rtf'
+    end
+
+    it 'to the synopsis' do
+      draft.synopsis_path.must_equal scrivener_path / 'Files/Docs/0_synopsis.txt'
+      research.synopsis_path.must_equal scrivener_path / 'Files/Docs/1_synopsis.txt'
+      trash.synopsis_path.must_equal scrivener_path / 'Files/Docs/2_synopsis.txt'
+    end
   end
 end

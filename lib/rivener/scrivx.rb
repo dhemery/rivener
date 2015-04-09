@@ -14,21 +14,23 @@ module Rivener
       author_first_name: 'FirstName'
     }
 
-    def self.scrivx(scrivener_path)
-      @path = Pathname(scrivener_path)
-      basename = @path.basename
-      scrivx_path = @path / basename.sub_ext('.scrivx')
+    def self.scrivx(path)
+      scrivener_path = Pathname(path)
+      basename = scrivener_path.basename
+      scrivx_path = scrivener_path / basename.sub_ext('.scrivx')
 
       raise "Cannot read SCRIVX file: #{scrivx_path}" unless scrivx_path.exist?
 
-      scrivx_path.open { |scrivx_file| return Rivener::Scrivx.new(Nokogiri::XML scrivx_file)}
+      scrivx_file = scrivx_path.open
+      Rivener::Scrivx.new(path: scrivener_path, scrivx: Nokogiri::XML(scrivx_file))
     end
 
     def self.project(scrivener_path)
       scrivx(scrivener_path).project
     end
 
-    def initialize(scrivx)
+    def initialize(path:, scrivx:)
+      @path = Pathname(path)
       @scrivx = scrivx
     end
 
@@ -45,10 +47,14 @@ module Rivener
       return [] if context.nil?
       context.xpath('./BinderItem').map do |binder_item_node|
         include = binder_item_node.at_xpath('./MetaData/IncludeInCompile')
+        id = binder_item_node['ID']
         properties = {
-          id: binder_item_node['ID'],
+          file_path: @path / "Files/Docs/#{id}.rtf",
+          id: id,
           include_in_compile?: !include.nil? && include.content == 'Yes',
+          notes_path: @path / "Files/Docs/#{id}_notes.rtf",
           parent: parent,
+          synopsis_path: @path / "Files/Docs/#{id}_synopsis.txt",
           title: binder_item_node.at_xpath('./Title').content,
           type: binder_item_node['Type'],
         }
