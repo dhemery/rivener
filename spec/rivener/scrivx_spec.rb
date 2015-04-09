@@ -11,6 +11,8 @@ describe Rivener::Scrivx do
   let(:scrivx_project_node) { scrivx_doc.at_css 'ScrivenerProject' }
   let(:scrivx_project_properties_node) { scrivx_project_node.at_css 'ProjectProperties' }
   let(:project) { scrivx.project }
+  let(:draft) { project.binder.children.find{ |item| item.id == '0' } }
+  let(:research) { project.binder.children.find{ |item| item.id == '1' } }
 
   describe 'parses the ProjectProperties' do
     describe 'ProjectTitle' do
@@ -66,8 +68,12 @@ describe Rivener::Scrivx do
 
   describe 'parses the Binder' do
     describe 'BinderItem elements' do
-      # Every project has Draft, Research, and Trash folders
-      it 'as binder_items' do
+      # Every project has at least these three top-level folders:
+      # ID: 0, Type: DraftFolder, initially named Draft
+      # ID: 1, Type: ResearchFolder, initially named Research
+      # ID: 2, Type: TrashFolder, initially named Trash
+      #
+      it 'each as binder_items' do
         project.binder.children.size.must_equal 3
       end
 
@@ -106,8 +112,6 @@ describe Rivener::Scrivx do
     end
 
     describe 'children of BinderItems' do
-      let(:draft) { project.binder.children.find{ |item| item.id == '0' } }
-      let(:research) { project.binder.children.find{ |item| item.id == '1' } }
       before do
         draft_folder_children_node = Nokogiri::XML::DocumentFragment.parse <<-SCRIVX
           <Children>
@@ -187,6 +191,23 @@ describe Rivener::Scrivx do
       draft.synopsis_path.must_equal scrivener_path / 'Files/Docs/0_synopsis.txt'
       research.synopsis_path.must_equal scrivener_path / 'Files/Docs/1_synopsis.txt'
       trash.synopsis_path.must_equal scrivener_path / 'Files/Docs/2_synopsis.txt'
+    end
+  end
+
+  describe 'parses the CustomMetaDataSettings' do
+    before do
+      custom_metadata_settings_node = Nokogiri::XML::DocumentFragment.parse <<-SCRIVX
+        <CustomMetaDataSettings>
+          <MetaDataField ID='style-id'>style</MetaDataField>
+          <MetaDataField ID='guide-id'>guide</MetaDataField>
+        </CustomMetaDataSettings>
+      SCRIVX
+      scrivx_project_node.add_child custom_metadata_settings_node
+    end
+
+    it 'as custom_metadata_fields' do
+      project.custom_metadata_fields['style-id'].must_equal 'style'
+      project.custom_metadata_fields['guide-id'].must_equal 'guide'
     end
   end
 end

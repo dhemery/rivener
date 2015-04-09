@@ -37,11 +37,16 @@ module Rivener
     def project
       project = OpenStruct.new(properties_from_elements(context: project_properties_node, map: PROJECT_PROPERTIES_MAP))
       project.binder = OpenStruct.new
-      project.binder[:children] = children(context: binder_node, parent: project.binder)
+      project.binder.children = children(context: binder_node, parent: project.binder)
+      project.custom_metadata_fields = custom_metadata_fields
       project
     end
 
     private
+
+    def binder_node
+      @scrivx.at_xpath('.//Binder')
+    end
 
     def children(context:, parent:)
       return [] if context.nil?
@@ -65,8 +70,11 @@ module Rivener
       end
     end
 
-    def binder_node
-      @scrivx.at_xpath('.//Binder')
+    def custom_metadata_fields
+      @scrivx.xpath('.//CustomMetaDataSettings/MetaDataField').inject({}) do |fields, field|
+        fields[field['ID']] = field.content
+        fields
+      end
     end
 
     def project_properties_node
