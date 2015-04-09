@@ -54,6 +54,7 @@ module Rivener
         include = binder_item_node.at_xpath('./MetaData/IncludeInCompile')
         id = binder_item_node['ID']
         properties = {
+          custom_metadata: custom_metadata(binder_item_node),
           file_path: @path / "Files/Docs/#{id}.rtf",
           id: id,
           include_in_compile?: !include.nil? && include.content == 'Yes',
@@ -67,6 +68,15 @@ module Rivener
         children_node = binder_item_node.at_xpath('Children')
         item.children = children(context: children_node, parent: item)
         item
+      end
+    end
+
+    def custom_metadata(item)
+      item.xpath('.//MetaDataItem').inject({}) do |fields, field|
+        id = field.at_xpath('./FieldID').content
+        value = field.at_xpath('./Value').content
+        fields[id] = value
+        fields
       end
     end
 

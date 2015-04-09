@@ -167,6 +167,30 @@ describe Rivener::Scrivx do
         scene_one.children.must_equal []
       end
     end
+
+    describe 'parses CustomMetaData fields' do
+      before do
+        draft_custom_metadata_node = Nokogiri::XML::DocumentFragment.parse <<-CHAPTER_CUSTOM_METADATA
+          <CustomMetaData>
+            <MetaDataItem>
+              <FieldID>foo</FieldID>
+              <Value>foo value</Value>
+            </MetaDataItem>
+            <MetaDataItem>
+              <FieldID>bar</FieldID>
+              <Value>value of bar</Value>
+            </MetaDataItem>
+          </CustomMetaData>
+        CHAPTER_CUSTOM_METADATA
+        draft_folder_node = scrivx_doc.at_xpath(%{.//BinderItem[@ID='0']})
+        draft_folder_node.add_child draft_custom_metadata_node
+      end
+
+      it 'whatever' do
+        draft.custom_metadata['foo'].must_equal 'foo value'
+        draft.custom_metadata['bar'].must_equal 'value of bar'
+      end
+    end
   end
 
   # Note that these methods DO NOT determine whether the file exists.
