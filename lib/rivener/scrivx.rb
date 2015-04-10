@@ -72,7 +72,7 @@ module Rivener
     end
 
     def custom_metadata(item)
-      item.xpath('.//MetaDataItem').inject({}) do |fields, field|
+      item.xpath('./MetaData/CustomMetaData/MetaDataItem').inject({}) do |fields, field|
         id = field.at_xpath('./FieldID').content
         value = field.at_xpath('./Value').content
         fields[id] = value

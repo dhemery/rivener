@@ -182,8 +182,8 @@ describe Rivener::Scrivx do
             </MetaDataItem>
           </CustomMetaData>
         CHAPTER_CUSTOM_METADATA
-        draft_folder_node = scrivx_doc.at_xpath(%{.//BinderItem[@ID='0']})
-        draft_folder_node.add_child draft_custom_metadata_node
+        draft_folder_metadata_node = scrivx_doc.at_xpath(%{.//BinderItem[@ID='0']/MetaData})
+        draft_folder_metadata_node.add_child draft_custom_metadata_node
       end
 
       it 'whatever' do
